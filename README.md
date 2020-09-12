@@ -25,7 +25,7 @@ uilton/http_to_mqtt:latest
 ```
 
 
-#### Publish to a topic
+## Publish to a topic
 Publish a message to the topic 'MyTopic' (API_KEY is not necessary if it's not defined as environment variable)
 
 Sending as POST with topic, message and api_key as body
@@ -66,7 +66,7 @@ Response:
 OK
 ```
 
-#### Subscribe to a topic
+## Subscribe to a topic
 
 You can subscribe to a topic.  `http_to_mqtt` will keep the connection open and wait for messages from the MQTT Broker and will send them as response when received.
 
