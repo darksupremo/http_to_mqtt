@@ -1,29 +1,25 @@
-var settings = {
+require('dotenv').config()
+const mqtt = require('mqtt');
+const app = require('express')();
+const bodyParser = require('body-parser');
+
+const settings = {
     mqtt: {
-        host: process.env.MQTT_HOST || '',
+        host: process.env.MQTT_HOST || 'mqtt://test.mosquitto.org',
         user: process.env.MQTT_USER || '',
         password: process.env.MQTT_PASS || '',
         clientId: process.env.MQTT_CLIENT_ID || null
     },
-    keepalive: {
-        topic: process.env.KEEP_ALIVE_TOPIC || 'keep_alive',
-        message: process.env.KEEP_ALIVE_MESSAGE || 'keep_alive'
-    },
     debug: process.env.DEBUG_MODE || false,
-    auth_key: process.env.AUTH_KEY || '',
+    api_key: process.env.API_KEY || '',
     http_port: process.env.PORT || 5000
 }
 
-var mqtt = require('mqtt');
-var express = require('express');
-var bodyParser = require('body-parser');
-var multer = require('multer');
 
-var app = express();
 
 function getMqttClient() {
 
-    var options = {
+    const options = {
         username: settings.mqtt.user,
         password: settings.mqtt.password
     };
@@ -35,30 +31,68 @@ function getMqttClient() {
     return mqtt.connect(settings.mqtt.host, options);
 }
 
-var mqttClient = getMqttClient();
+const mqttClient = getMqttClient();
 
 app.set('port', settings.http_port);
 app.use(bodyParser.json());
+app.use(logRequest);
+app.use(parseParameters);
+app.use('/publish/:topic?/:message?', parseParameters);
+app.use('/subscribe/:topic?', parseParameters);
+app.use(authorizeUser);
+app.use(ensureTopicSpecified);
+
+app.listen(app.get('port'), function () {
+    console.log('Node app is running on port', app.get('port'));
+});
+
+app.get('/publish/:topic?/:message?', ((req, res) => {
+    mqttClient.publish(req.body.topic, req.body.message || "");
+    res.sendStatus(200);
+}));
+
+app.post('/publish', ((req, res) => {
+    mqttClient.publish(req.body.topic, req.body.message || "");
+    res.sendStatus(200);
+}));
+
+app.get('/subscribe/:topic?', (req, res) => {
+    const topic = req.body.topic;
+    const mqttClient = getMqttClient();
+
+    mqttClient.on('connect', function () {
+        mqttClient.subscribe(topic);
+    });
+
+    mqttClient.on('message', function (t, m) {
+        res.write(m);
+    });
+
+    req.on("close", function () {
+        mqttClient.end();
+    });
+
+    req.on("end", function () {
+        mqttClient.end();
+    });
+});
 
 function logRequest(req, res, next) {
-    var ip = req.headers['x-forwarded-for'] ||
-        req.connection.remoteAddress;
-    var message = 'Received request [' + req.originalUrl +
-        '] from [' + ip + ']';
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
+    let message = `Received request [${req.originalUrl}] from [${ip}]`;
     if (settings.debug) {
-        message += ' with payload [' + JSON.stringify(req.body) + ']';
-    } else {
-        message += '.';
+        message += ` with payload [${JSON.stringify(req.body)}]`;
     }
+
     console.log(message);
 
     next();
 }
 
 function authorizeUser(req, res, next) {
-    if (settings.auth_key && req.body['key'] != settings.auth_key) {
-        console.log('Request is not authorized.');
+    if (settings.api_key && req.body.api_key !== settings.api_key) {
+        console.warn('Request is not authorized.');
         res.sendStatus(401);
     }
     else {
@@ -66,30 +100,16 @@ function authorizeUser(req, res, next) {
     }
 }
 
-function checkSingleFileUpload(req, res, next) {
-    if (req.query.single) {
-        var upload = multer().single(req.query.single);
-
-        upload(req, res, next);
+function parseParameters(req, res, next) {
+    if (req.query.topic || req.params.topic) {
+        req.body.topic = req.query.topic || req.params.topic;
     }
-    else {
-        next();
+    if (req.query.message || req.params.message) {
+        req.body.message = req.query.message || req.params.message;
     }
-}
-
-function checkMessagePathQueryParameter(req, res, next) {
-    if (req.query.path) {
-        req.body.message = req.body[req.query.path];
+    if (req.query.api_key || req.params.api_key || req.headers.api_key) {
+        req.body.api_key = req.query.api_key || req.params.api_key || req.headers.api_key;
     }
-    next();
-}
-
-function checkTopicQueryParameter(req, res, next) {
-
-    if (req.query.topic) {
-        req.body.topic = req.query.topic;
-    }
-
     next();
 }
 
@@ -101,49 +121,3 @@ function ensureTopicSpecified(req, res, next) {
         next();
     }
 }
-
-app.get('/keep_alive/', logRequest, function (req, res) {
-    mqttClient.publish(settings.keepalive.topic, settings.keepalive.message);
-    res.sendStatus(200);
-});
-
-app.post('/post/', logRequest, authorizeUser, checkSingleFileUpload, checkMessagePathQueryParameter, checkTopicQueryParameter, ensureTopicSpecified, function (req, res) {
-    mqttClient.publish(req.body['topic'], req.body['message']);
-    res.sendStatus(200);
-});
-
-app.get('/subscribe/', logRequest, authorizeUser, function (req, res) {
-
-    var topic = req.query.topic;
-
-    if (!topic) {
-        res.status(500).send('topic not specified');
-    }
-    else {
-        // get a new mqttClient
-        // so we dont constantly add listeners on the 'global' mqttClient
-        var mqttClient = getMqttClient();
-
-        mqttClient.on('connect', function () {
-            mqttClient.subscribe(topic);
-        });
-
-        mqttClient.on('message', function (t, m) {
-            if (t === topic) {
-                res.write(m);
-            }
-        });
-
-        req.on("close", function () {
-            mqttClient.end();
-        });
-
-        req.on("end", function () {
-            mqttClient.end();
-        });
-    }
-});
-
-app.listen(app.get('port'), function () {
-    console.log('Node app is running on port', app.get('port'));
-});
