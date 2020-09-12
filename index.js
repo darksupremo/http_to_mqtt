@@ -11,8 +11,8 @@ const settings = {
         clientId: process.env.MQTT_CLIENT_ID || null
     },
     debug: process.env.DEBUG_MODE || false,
-    apikey: process.env.API_KEY || '',
-    http_port: process.env.PORT || 5000
+    apiKey: process.env.API_KEY || '',
+    httpPort: process.env.PORT || 5000
 }
 
 
@@ -33,7 +33,7 @@ function getMqttClient() {
 
 const mqttClient = getMqttClient();
 
-app.set('port', settings.http_port);
+app.set('port', settings.httpPort);
 app.use(bodyParser.json());
 app.use(logRequest);
 app.use(parseParameters);
@@ -91,7 +91,7 @@ function logRequest(req, res, next) {
 }
 
 function authorizeUser(req, res, next) {
-    if (settings.apikey && req.body.apikey !== settings.apikey) {
+    if (settings.apiKey && req.body["api-key"] !== settings.apiKey) {
         console.warn('Request is not authorized.');
         res.sendStatus(401);
     }
@@ -107,8 +107,8 @@ function parseParameters(req, res, next) {
     if (req.query.message || req.params.message) {
         req.body.message = req.query.message || req.params.message;
     }
-    if (req.query.apikey || req.params.apikey || req.headers.apikey) {
-        req.body.apikey = req.query.apikey || req.params.apikey || req.headers.apikey;
+    if (req.query["api-key"] || req.params["api-key"] || req.headers["api-key"]) {
+        req.body["api-key"] = req.query["api-key"] || req.params["api-key"] || req.headers["api-key"];
     }
     next();
 }
