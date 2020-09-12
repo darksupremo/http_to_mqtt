@@ -26,39 +26,39 @@ uilton/http_to_mqtt:latest
 
 
 ## Publish to a topic
-Publish a message to the topic 'MyTopic' (API_KEY is not necessary if it's not defined as environment variable)
+Publish a message to the topic 'MyTopic' (api-key is not necessary if it's not defined as environment variable)
 
-Sending as POST with topic, message and api_key as body
+Sending as POST with topic, message and api-key as body
 ```bash
-curl -H "Content-Type: application/json" "http://localhost:5000/publish"  -d '{"topic" : "MyTopic", "message" : "hi", "api_key": "MY_SECRET_KEY" }'
+curl -H "Content-Type: application/json" "http://localhost:5000/publish"  -d '{"topic" : "MyTopic", "message" : "hi", "api-key": "MY_SECRET_KEY" }'
 ```
 
 OR
 
-Sending as POST with 'topic' and 'message' as body and API_KEY as Header
+Sending as POST with 'topic' and 'message' as body and 'API-KEY' as Header
 ```bash
-curl -H "Content-Type: application/json" -H "API_KEY: MY_SECRET_KEY" "http://localhost:5000/publish"  -d '{"topic" : "MyTopic", "message" : "hi" }'
+curl -H "Content-Type: application/json" -H "API-KEY: MY_SECRET_KEY" "http://localhost:5000/publish"  -d '{"topic" : "MyTopic", "message" : "hi" }'
 ```
 
 OR
 
-Sending as GET (/publish/:topic/:message) and with api_key as Query Parameter
+Sending as GET (/publish/:topic/:message) and with 'api-key' as Query Parameter
 ```bash
-curl "http://localhost:5000/publish/MyTopic/hi?api_key=MY_SECRET_KEY"
+curl "http://localhost:5000/publish/MyTopic/hi?api-key=MY_SECRET_KEY"
 ```
 
 OR
 
-Sending as GET (/publish/:topic/:message) and with api_key as HEADER
+Sending as GET (/publish/:topic/:message) and with 'API-KEY' as HEADER
 ```bash
-curl -H "API_KEY: MY_SECRET_KEY" "http://localhost:5000/publish/MyTopic/hi"
+curl -H "API-KEY: MY_SECRET_KEY" "http://localhost:5000/publish/MyTopic/hi"
 ```
 
 OR
 
-Sending as GET (/publish) with topic and message as Query Parameter and api_key as HEADER
+Sending as GET (/publish) with topic and message as Query Parameter and 'API-KEY' as HEADER
 ```bash
-curl -H "API_KEY: MY_SECRET_KEY" "http://localhost:5000/publish?topic=MyTopic&message=hi"
+curl -H "API-KEY: MY_SECRET_KEY" "http://localhost:5000/publish?topic=MyTopic&message=hi"
 ```
 
 Response:
@@ -72,16 +72,16 @@ You can subscribe to a topic.  `http_to_mqtt` will keep the connection open and 
 
 Listen for messages in the topic 'MyTopic'.  Use `-ivs --raw` to see messages come in as they are received.
 
-Sending as GET with 'topic' and 'api_key' as Query Parameter
+Sending as GET with 'topic' and 'api-key' as Query Parameter
 ```bash
-curl -ivs --raw "http://localhost:5000/subscribe?topic=MyTopic&api_key=MY_SECRET_KEY"
+curl -ivs --raw "http://localhost:5000/subscribe?topic=MyTopic&api-key=MY_SECRET_KEY"
 ```
 
 OR
 
-Sending as GET (/subscribe/:topic) with 'topic' as Path Parameter and 'API_KEY' as HEADER
+Sending as GET (/subscribe/:topic) with 'topic' as Path Parameter and 'API-KEY' as HEADER
 ```bash
-curl -H "API_KEY: MY_SECRET_KEY" -ivs --raw "http://localhost:5000/subscribe/MyTopic"
+curl -H "API-KEY: MY_SECRET_KEY" -ivs --raw "http://localhost:5000/subscribe/MyTopic"
 ```
 
 output:

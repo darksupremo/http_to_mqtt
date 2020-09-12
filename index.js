@@ -11,7 +11,7 @@ const settings = {
         clientId: process.env.MQTT_CLIENT_ID || null
     },
     debug: process.env.DEBUG_MODE || false,
-    api_key: process.env.API_KEY || '',
+    apikey: process.env.API_KEY || '',
     http_port: process.env.PORT || 5000
 }
 
@@ -91,7 +91,7 @@ function logRequest(req, res, next) {
 }
 
 function authorizeUser(req, res, next) {
-    if (settings.api_key && req.body.api_key !== settings.api_key) {
+    if (settings.apikey && req.body.apikey !== settings.apikey) {
         console.warn('Request is not authorized.');
         res.sendStatus(401);
     }
@@ -107,8 +107,8 @@ function parseParameters(req, res, next) {
     if (req.query.message || req.params.message) {
         req.body.message = req.query.message || req.params.message;
     }
-    if (req.query.api_key || req.params.api_key || req.headers.api_key) {
-        req.body.api_key = req.query.api_key || req.params.api_key || req.headers.api_key;
+    if (req.query.apikey || req.params.apikey || req.headers.apikey) {
+        req.body.apikey = req.query.apikey || req.params.apikey || req.headers.apikey;
     }
     next();
 }
