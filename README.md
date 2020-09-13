@@ -24,6 +24,16 @@ docker run -p 5000:5000 \
 uilton/http_to_mqtt:latest
 ```
 
+Optionally, if you plan to use the cmd endpoint, you must create a volume to `/usr/src/app/commands.yml` file
+
+Eg:
+```sh
+docker run -p 5000:5000 \
+-e MQTT_HOST=mqtt://test.mosquitto.org \
+-e API_KEY=MY_SECRET_KEY \
+-v path/to/commands.yml:/usr/src/app/commands.yml:ro \
+uilton/http_to_mqtt:latest
+```
 
 ## Publish to a topic
 Publish a message to the topic 'MyTopic' (api-key is not necessary if it's not defined as environment variable)
@@ -64,6 +74,39 @@ curl -H "API-KEY: MY_SECRET_KEY" "http://localhost:5000/publish?topic=MyTopic&me
 Response:
 ```
 OK
+```
+
+## Publish to a topic, but replacing the received topic / message to something else
+
+My goal with this endpoint is to create a generic applet on ifttt that can be configured to do different things, but can be used just to remap a topic or a key to something else, same for message, like remap 'on' to '1', for example.
+
+```bash
+curl "http://localhost:5000/cmd/command_name/on?api-key=MY_SECRET_KEY"
+```
+
+Based on `commands_sample.yml` it will be translated to topic `example/topic` with a message `1`
+
+Response:
+```
+OK
+```
+
+All the request variations from the `publish` API, as above, also apply here.
+
+`commands.yml`
+```yaml
+command_name: # name used to identify this command, will be matched by the topic parameter
+  topic: example/topic # topic that will replace the topic passed as parameter
+  options:
+    'on': '1' # when message parameter is 'on', it will translate it to '1'
+    'off': '0' # when message parameter is 'off', it will translate it to '0'
+    # if the message parameter is not in the options list, it will be sent as is
+
+another_command:
+  topic: example/topic2
+  options:
+    '1': 'on' # when message parameter is '1', it will translate it to 'on'
+    '0': 'off' # when message parameter is '0', it will translate it to 'off'
 ```
 
 ## Subscribe to a topic

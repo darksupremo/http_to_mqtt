@@ -2,6 +2,8 @@ require('dotenv').config()
 const mqtt = require('mqtt');
 const app = require('express')();
 const bodyParser = require('body-parser');
+const fs = require('fs');
+const yaml = require('yaml');
 
 const settings = {
     mqtt: {
@@ -15,10 +17,7 @@ const settings = {
     httpPort: process.env.PORT || 5000
 }
 
-
-
 function getMqttClient() {
-
     const options = {
         username: settings.mqtt.user,
         password: settings.mqtt.password
@@ -38,6 +37,7 @@ app.use(bodyParser.json());
 app.use(logRequest);
 app.use(parseParameters);
 app.use('/publish/:topic?/:message?', parseParameters);
+app.use('/cmd/:topic?/:message?', parseParameters);
 app.use('/subscribe/:topic?', parseParameters);
 app.use(authorizeUser);
 app.use(ensureTopicSpecified);
@@ -53,6 +53,23 @@ app.get('/publish/:topic?/:message?', ((req, res) => {
 
 app.post('/publish', ((req, res) => {
     mqttClient.publish(req.body.topic, req.body.message || "");
+    res.sendStatus(200);
+}));
+
+/**
+ * Used to generate a mqtt topic/message from an simple command
+ * topic: command key
+ * message: option key
+ */
+app.get('/cmd/:topic?/:message?', ((req, res) => {
+    const file = fs.readFileSync('./commands.yml', 'utf8');
+    const cmd = yaml.parse(file)[req.body.topic];
+    if (!cmd) {
+        res.status(500).send('Command not found');
+        return;
+    }
+
+    mqttClient.publish(cmd.topic, cmd.options[req.body.message] || req.body.message || "");
     res.sendStatus(200);
 }));
 
