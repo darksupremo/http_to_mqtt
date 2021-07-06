@@ -9,7 +9,7 @@ COPY package*.json ./
 # If you are building your code for production
 RUN npm ci --only=production
 
-VOLUME ['/usr/src/app/commands.yml']
+#VOLUME ['/usr/src/app/commands.yml']
 
 # Bundle app source
 COPY . .
