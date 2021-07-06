@@ -1,5 +1,5 @@
-FROM node:15-alpine
-WORKDIR /usr/src/app
+FROM node:lts
+WORKDIR /app
 
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
@@ -9,9 +9,10 @@ COPY package*.json ./
 # If you are building your code for production
 RUN npm ci --only=production
 
-#VOLUME ['/usr/src/app/commands.yml']
+#VOLUME ['/app/commands.yml']
 
 # Bundle app source
 COPY . .
 
+EXPOSE 5000
 CMD [ "npm", "start" ]
