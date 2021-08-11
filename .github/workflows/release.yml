@@ -4,9 +4,6 @@ on:
   push:
     branches: [ master ]
   workflow_dispatch:
-
-env:
-  IMAGE_NAME: darksupremo/http_to_mqtt
   
 jobs:
   build-docker:
@@ -37,7 +34,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ env.IMAGE_NAME }}:latest
+            ghcr.io/${{ github.repository }}:latest
             
       - name: Build Changelog
         id: github_release
@@ -58,7 +55,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SHA8: ${GITHUB_SHA::8}
         with:
           body: ${{ steps.github_release.outputs.changelog }}
           tag_name: v${{ steps.date.outputs.date }}-${{ steps.slug.outputs.sha8 }}
