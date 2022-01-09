@@ -10,7 +10,7 @@ const settings = {
         host: process.env.MQTT_HOST || 'mqtt://test.mosquitto.org',
         user: process.env.MQTT_USER || '',
         password: process.env.MQTT_PASS || '',
-        clientId: process.env.MQTT_CLIENT_ID || null
+        clientId: process.env.MQTT_CLIENT_ID || "http_to_mqtt"
     },
     debug: process.env.DEBUG_MODE || false,
     apiKey: process.env.API_KEY || '',
